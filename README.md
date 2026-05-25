@@ -1,2 +1,3 @@
 ### Hexlet tests and linter status:
 [![Actions Status](https://github.com/poltabletki/go-from-scratch-project-242/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/poltabletki/go-from-scratch-project-242/actions)
+[![Tests](https://github.com/poltabletki/go-from-scratch-project-242/actions/workflows/tests.yml/badge.svg)](https://github.com/poltabletki/go-from-scratch-project-242/actions/workflows/tests.yml)

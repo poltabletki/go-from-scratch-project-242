@@ -66,3 +66,27 @@ func TestGetPathSize_NotFound(t *testing.T) {
 	require.Error(t, err)
 	require.Empty(t, size)
 }
+
+func TestGetPathSize_HiddenFilesFiltering(t *testing.T) {
+	t.Parallel()
+
+	tempDir := t.TempDir()
+
+	visibleFile := filepath.Join(tempDir, "visible.txt")
+	require.NoError(t, os.WriteFile(visibleFile, []byte("12345"), 0o644))
+
+	hiddenFile := filepath.Join(tempDir, ".hidden.txt")
+	require.NoError(t, os.WriteFile(hiddenFile, []byte("123"), 0o644))
+
+	hiddenDir := filepath.Join(tempDir, ".hidden-dir")
+	require.NoError(t, os.Mkdir(hiddenDir, 0o755))
+	require.NoError(t, os.WriteFile(filepath.Join(hiddenDir, "inside.txt"), []byte("123456"), 0o644))
+
+	sizeWithoutHidden, err := code.GetPathSize(tempDir, false, false, false)
+	require.NoError(t, err)
+	require.Equal(t, "5B", sizeWithoutHidden)
+
+	sizeWithHidden, err := code.GetPathSize(tempDir, false, false, true)
+	require.NoError(t, err)
+	require.Equal(t, "8B", sizeWithHidden)
+}

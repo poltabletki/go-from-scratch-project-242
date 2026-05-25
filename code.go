@@ -3,6 +3,7 @@ package code
 import (
 	"fmt"
 	"os"
+	"strings"
 )
 
 func GetPathSize(path string, recursive, human, all bool) (string, error) {
@@ -22,6 +23,10 @@ func GetPathSize(path string, recursive, human, all bool) (string, error) {
 
 	var totalSize int64
 	for _, entry := range entries {
+		if !all && strings.HasPrefix(entry.Name(), ".") {
+			continue
+		}
+
 		if entry.IsDir() {
 			continue
 		}

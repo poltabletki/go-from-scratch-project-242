@@ -3,22 +3,32 @@ package code
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
 func GetPathSize(path string, recursive, human, all bool) (string, error) {
-	info, err := os.Lstat(path)
+	size, err := getPathSizeBytes(path, recursive, all)
 	if err != nil {
 		return "", err
 	}
 
+	return formatSize(size, human), nil
+}
+
+func getPathSizeBytes(path string, recursive, all bool) (int64, error) {
+	info, err := os.Lstat(path)
+	if err != nil {
+		return 0, err
+	}
+
 	if !info.IsDir() {
-		return formatSize(info.Size(), human), nil
+		return info.Size(), nil
 	}
 
 	entries, err := os.ReadDir(path)
 	if err != nil {
-		return "", err
+		return 0, err
 	}
 
 	var totalSize int64
@@ -28,18 +38,29 @@ func GetPathSize(path string, recursive, human, all bool) (string, error) {
 		}
 
 		if entry.IsDir() {
+			if !recursive {
+				continue
+			}
+
+			nestedPath := filepath.Join(path, entry.Name())
+			nestedSize, err := getPathSizeBytes(nestedPath, recursive, all)
+			if err != nil {
+				return 0, err
+			}
+
+			totalSize += nestedSize
 			continue
 		}
 
 		entryInfo, err := entry.Info()
 		if err != nil {
-			return "", err
+			return 0, err
 		}
 
 		totalSize += entryInfo.Size()
 	}
 
-	return formatSize(totalSize, human), nil
+	return totalSize, nil
 }
 
 func formatSize(size int64, human bool) string {

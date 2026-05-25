@@ -27,7 +27,6 @@ func TestGetPathSize_Directory(t *testing.T) {
 	size, err := code.GetPathSize(path, false, false, false)
 
 	require.NoError(t, err)
-	// alpha.txt (4B) + beta.txt (6B), nested directory is ignored in non-recursive mode.
 	require.Equal(t, "10B", size)
 }
 
@@ -89,4 +88,34 @@ func TestGetPathSize_HiddenFilesFiltering(t *testing.T) {
 	sizeWithHidden, err := code.GetPathSize(tempDir, false, false, true)
 	require.NoError(t, err)
 	require.Equal(t, "8B", sizeWithHidden)
+}
+
+func TestGetPathSize_DirectoryRecursive(t *testing.T) {
+	t.Parallel()
+
+	path := filepath.Join("..", "testdata", "fixtures", "dir-a")
+	size, err := code.GetPathSize(path, true, false, false)
+
+	require.NoError(t, err)
+	require.Equal(t, "57B", size)
+}
+
+func TestGetPathSize_RecursiveHiddenDirectoriesFiltering(t *testing.T) {
+	t.Parallel()
+
+	tempDir := t.TempDir()
+
+	require.NoError(t, os.WriteFile(filepath.Join(tempDir, "visible.txt"), []byte("12345"), 0o644))
+
+	hiddenDir := filepath.Join(tempDir, ".hidden-dir")
+	require.NoError(t, os.Mkdir(hiddenDir, 0o755))
+	require.NoError(t, os.WriteFile(filepath.Join(hiddenDir, "inside.txt"), []byte("123456"), 0o644))
+
+	sizeWithoutHidden, err := code.GetPathSize(tempDir, true, false, false)
+	require.NoError(t, err)
+	require.Equal(t, "5B", sizeWithoutHidden)
+
+	sizeWithHidden, err := code.GetPathSize(tempDir, true, false, true)
+	require.NoError(t, err)
+	require.Equal(t, "11B", sizeWithHidden)
 }
